@@ -514,13 +514,13 @@
 
   </main>
 
-  <!-- MODAL 1: EDIT 15-STUDENT ROSTER & EDITABLE NAMES & PINS -->
+  <!-- MODAL 1: EDIT 15-STUDENT ROSTER -->
   <div id="rosterModal" class="fixed inset-0 bg-slate-900/60 hidden items-center justify-center z-50 p-4">
     <div class="bg-white rounded-2xl max-w-2xl w-full shadow-2xl border border-slate-200 overflow-hidden">
       <div class="px-5 py-4 bg-slate-900 text-white flex items-center justify-between">
         <div>
-          <h3 class="font-bold text-base">Edit 15-Student Roster (Editable Names, Optionals & PINs)</h3>
-          <p class="text-xs text-slate-400">Anyone can edit names here, or protect with Mentor PIN.</p>
+          <h3 class="font-bold text-base">Edit 15-Student Roster (Mentor Protected)</h3>
+          <p class="text-xs text-slate-400">Requires Mentor PIN to modify names and PINs.</p>
         </div>
         <button type="button" onclick="closeRosterModal()" class="text-slate-400 hover:text-white text-xl font-bold cursor-pointer">&times;</button>
       </div>
@@ -587,21 +587,21 @@
   </div>
 
   <script>
-    const STORAGE_KEY_ROSTER = 'manuu_cse_roster_v15_v1';
-    const STORAGE_KEY_LOGS   = 'manuu_cse_logs_v15_v1';
-    const STORAGE_KEY_SYNC   = 'manuu_cse_sync_v15_v1';
+    const STORAGE_KEY_ROSTER = 'manuu_cse_roster_v15_v3';
+    const STORAGE_KEY_LOGS   = 'manuu_cse_logs_v15_v3';
+    const STORAGE_KEY_SYNC   = 'manuu_cse_sync_v15_v3';
 
     const PREBAKED_SHEET_URL = '';
 
     const defaultRoster15 = [
-      { id: 'M01', name: 'Abdurrahman',     optional: 'PSIR',         pin: '0992' },
-      { id: 'M02', name: 'Kalyani',     optional: 'PSIR',    pin: '8096' },
-      { id: 'M03', name: 'Numan',     optional: 'PSIR',      pin: '7070' },
-      { id: 'M04', name: 'Rajarajeshwari',     optional: 'Sociology',         pin: '1023' },
-      { id: 'M05', name: 'Saif Ahmad',     optional: 'Eng Subject',     pin: '7866' },
-      { id: 'M06', name: 'Satyanarayana',     optional: 'PSIR', pin: '1952' },
-      { id: 'M07', name: 'Sanjana',     optional: 'Anthropology',    pin: '2426' },
-      { id: 'M08', name: 'Tejaswini',     optional: 'Sociology',         pin: '7715' },
+      { id: 'M01', name: 'Student 1',     optional: 'PSIR',         pin: '1001' },
+      { id: 'M02', name: 'Student 2',     optional: 'Sociology',    pin: '1002' },
+      { id: 'M03', name: 'Student 3',     optional: 'History',      pin: '1003' },
+      { id: 'M04', name: 'Student 4',     optional: 'PSIR',         pin: '1004' },
+      { id: 'M05', name: 'Student 5',     optional: 'Urdu Lit',     pin: '1005' },
+      { id: 'M06', name: 'Student 6',     optional: 'Anthropology', pin: '1006' },
+      { id: 'M07', name: 'Student 7',     optional: 'Geography',    pin: '1007' },
+      { id: 'M08', name: 'Student 8',     optional: 'PSIR',         pin: '1008' },
       { id: 'M09', name: 'Student 9',     optional: 'Public Admin', pin: '1009' },
       { id: 'M10', name: 'Student 10',    optional: 'Urdu Lit',     pin: '1010' },
       { id: 'M11', name: 'Student 11',    optional: 'Political Sci',pin: '1011' },
@@ -672,7 +672,6 @@
         document.getElementById('mentorPinBtn').textContent = '🛡️ Mentor Active';
         document.getElementById('mentorPinBtn').className = 'bg-emerald-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition shadow-sm';
         
-        // Show Mentor Matrix tab
         document.getElementById('tabMatrixBtn').classList.remove('hidden');
         switchMode('matrix');
       } else if (pass !== null) {
@@ -707,7 +706,6 @@
         const dStr = shiftDate(todayStr, offset);
         allLogs[dStr] = {};
         roster.forEach(s => {
-          const isToday = offset === 0;
           allLogs[dStr][s.id] = {
             status: 'Present',
             gs: 3.5,
@@ -1076,10 +1074,12 @@
         lbBody.innerHTML = '';
         [...statsList].sort((a, b) => b.currAvg - a.currAvg).forEach((item, idx) => {
           const tr = document.createElement('tr');
-          tr.className = 'hover:bg-blue-50/50';
+          tr.id = `leaderboardRow_${item.student.id}`;
+          tr.className = `hover:bg-blue-50/50 cursor-pointer transition ${item.student.id === inspectedStudentId ? 'bg-blue-50/80 font-semibold' : ''}`;
+          tr.onclick = () => inspectStudent(item.student.id, true);
           tr.innerHTML = `
             <td class="py-2.5 px-3 font-mono text-xs text-slate-500">#${idx + 1}</td>
-            <td class="py-2.5 px-3"><div class="font-bold text-slate-800">${item.student.name}</div><div class="text-[11px] text-purple-700">${item.student.optional}</div></td>
+            <td class="py-2.5 px-3"><div class="font-bold text-slate-800">${item.student.name}</div><div class="text-[11px] font-purple-700">${item.student.optional}</div></td>
             <td class="py-2.5 px-2 text-center font-bold text-slate-900">${item.currAvg.toFixed(1)}h</td>
             <td class="py-2.5 px-2 text-center text-xs"><span class="text-slate-400">0.0h</span></td>
             <td class="py-2.5 px-2 text-center font-medium text-teal-800">${item.currMainsQs} Qs</td>
@@ -1089,6 +1089,107 @@
           lbBody.appendChild(tr);
         });
       }
+
+      inspectStudent(inspectedStudentId, false);
+    }
+
+    function inspectStudent(studentId, updateHighlight = true) {
+      inspectedStudentId = studentId;
+      if (updateHighlight) {
+        roster.forEach(s => {
+          const r = document.getElementById(`leaderboardRow_${s.id}`);
+          if (r) {
+            if (s.id === studentId) r.className = 'hover:bg-blue-50/50 cursor-pointer transition bg-blue-50/80 font-semibold';
+            else r.className = 'hover:bg-blue-50/50 cursor-pointer transition';
+          }
+        });
+      }
+
+      const dateStr = document.getElementById('activeDate').value;
+      const student = roster.find(s => s.id === studentId) || roster[0];
+      const nameEl = document.getElementById('inspectStudentName');
+      if (nameEl) nameEl.textContent = `${student.name} (${student.optional})`;
+
+      const barsEl = document.getElementById('inspectorBars');
+      if (!barsEl) return;
+      barsEl.innerHTML = '';
+
+      let sumGS = 0, sumOpt = 0, sumMains = 0, sumPrelims = 0, sumCSAT = 0, sumMainsQs = 0, sumPrelMCQs = 0;
+
+      for (let i = -6; i <= 0; i++) {
+        const d = shiftDate(dateStr, i);
+        const e = getDayLogForStudent(d, student.id);
+        const tot = computeTotalHours(e);
+        sumGS += e.gs; sumOpt += e.opt; sumMains += e.mainsHrs; sumPrelims += e.prelimsHrs; sumCSAT += e.csat;
+        sumMainsQs += (parseInt(e.mainsQs) || 0); sumPrelMCQs += (parseInt(e.prelimsMCQs) || 0);
+
+        const heightPct = Math.min(100, Math.round((tot / 12) * 100));
+        const col = document.createElement('div');
+        col.className = 'flex-1 flex flex-col items-center justify-end h-full';
+        col.innerHTML = `<div class="text-[10px] font-bold text-slate-600 mb-1">${tot.toFixed(1)}</div><div class="w-full rounded-t-md ${tot >= kpiConfig.frontRunnerMin ? 'bg-emerald-500' : (tot >= kpiConfig.performerMin ? 'bg-amber-400' : 'bg-rose-400')}" style="height:${Math.max(8, heightPct)}%"></div><div class="text-[10px] text-slate-400 mt-1 font-mono">${d.slice(8)}</div>`;
+        barsEl.appendChild(col);
+      }
+
+      const grandTotal = +(sumGS + sumOpt + sumMains + sumPrelims + sumCSAT).toFixed(1) || 1;
+      const avg7 = +(grandTotal / 7).toFixed(1);
+      const tierObj = classifyStudent({ status: 'Present', gs: avg7, mainsHrs: sumMainsQs > 0 ? 1 : 0, mainsQs: sumMainsQs, prelimsMCQs: sumPrelMCQs });
+      const tierBadge = document.getElementById('inspectStudentTier');
+      if (tierBadge) {
+        tierBadge.className = `text-xs font-bold px-2.5 py-1 rounded-full ${tierObj.badgeClass}`;
+        tierBadge.textContent = `${tierObj.dot} ${tierObj.tier} (${avg7}h/d)`;
+      }
+
+      const splitEl = document.getElementById('inspectorSubjectSplit');
+      if (splitEl) {
+        splitEl.innerHTML = `
+          <div class="flex justify-between"><span>GS Total (7d):</span><b>${sumGS.toFixed(1)}h (${Math.round(sumGS/grandTotal*100)}%)</b></div>
+          <div class="flex justify-between"><span>Optional (${student.optional}):</span><b>${sumOpt.toFixed(1)}h (${Math.round(sumOpt/grandTotal*100)}%)</b></div>
+          <div class="flex justify-between"><span>Mains Test (${sumMainsQs} Qs):</span><b>${sumMains.toFixed(1)}h</b></div>
+          <div class="flex justify-between"><span>Prelims Test (${sumPrelMCQs} MCQs):</span><b>${sumPrelims.toFixed(1)}h</b></div>
+          <div class="flex justify-between"><span>CSAT Total (7d):</span><b>${sumCSAT.toFixed(1)}h</b></div>
+        `;
+      }
+    }
+
+    function copyWhatsAppReport() {
+      const dateStr = document.getElementById('activeDate').value;
+      const student = roster.find(s => s.id === inspectedStudentId) || roster[0];
+      let sumGS = 0, sumOpt = 0, sumMains = 0, sumPrelims = 0, sumCSAT = 0, sumQs = 0, sumMCQs = 0;
+
+      for (let i = -6; i <= 0; i++) {
+        const e = getDayLogForStudent(shiftDate(dateStr, i), student.id);
+        sumGS += e.gs; sumOpt += e.opt; sumMains += e.mainsHrs; sumPrelims += e.prelimsHrs; sumCSAT += e.csat;
+        sumQs += (parseInt(e.mainsQs) || 0); sumMCQs += (parseInt(e.prelimsMCQs) || 0);
+      }
+      const tot = +(sumGS + sumOpt + sumMains + sumPrelims + sumCSAT).toFixed(1);
+      const avg = +(tot / 7).toFixed(1);
+      const tier = classifyStudent({ status: 'Present', gs: avg, mainsQs: sumQs, prelimsMCQs: sumMCQs }).tier;
+
+      const lines = [
+        `*MANUU CSE Academy — 7-Day Mentorship Review*`,
+        `👤 *Aspirant:* ${student.name} (${student.optional})`,
+        `📅 *Week Ending:* ${dateStr}`,
+        `🏆 *Cohort Category:* ${tier} (${avg} hrs/day avg)`,
+        ``,
+        `*7-Day Breakdown (${tot} hrs total):*`,
+        `• General Studies: ${sumGS.toFixed(1)} hrs`,
+        `• Optional (${student.optional}): ${sumOpt.toFixed(1)} hrs`,
+        `• Mains Answer Writing: ${sumMains.toFixed(1)} hrs (${sumQs} Qs written)`,
+        `• Prelims Practice: ${sumPrelims.toFixed(1)} hrs (${sumMCQs} MCQs solved)`,
+        `• CSAT: ${sumCSAT.toFixed(1)} hrs`,
+        ``,
+        `📌 *Mentor Action Note:* ${avg >= 8 ? 'Great consistency! Keep pushing daily answer writing.' : 'Let us connect for a 10-min slot adjustments check-in tomorrow.'}`
+      ];
+
+      navigator.clipboard.writeText(lines.join(String.fromCharCode(10))).then(() => {
+        const toast = document.getElementById('waCopyToast');
+        if (toast) {
+          toast.classList.remove('hidden');
+          setTimeout(() => toast.classList.add('hidden'), 3500);
+        }
+      }).catch(err => {
+        alert('Failed to copy to clipboard.');
+      });
     }
 
     function openSyncModal() {
@@ -1165,7 +1266,6 @@
       document.getElementById('matrixView').classList.add('hidden');
       document.getElementById('analyticsView').classList.add('hidden');
 
-      // Update tab styles
       document.getElementById('tabStudentBtn').className = 'px-4 py-2 rounded-md text-xs sm:text-sm font-semibold text-slate-600 hover:text-slate-900 transition cursor-pointer';
       document.getElementById('tabAnalyticsBtn').className = 'px-4 py-2 rounded-md text-xs sm:text-sm font-semibold text-slate-600 hover:text-slate-900 transition cursor-pointer';
       const mBtn = document.getElementById('tabMatrixBtn');
@@ -1187,6 +1287,10 @@
     }
 
     function openRosterModal() {
+      if (!isMentorAdmin) {
+        promptMentorAccess();
+        if (!isMentorAdmin) return;
+      }
       const container = document.getElementById('rosterInputsContainer');
       container.innerHTML = '';
       roster.forEach((s, index) => {
@@ -1231,13 +1335,16 @@
       const rows = [['Date', 'Roll_ID', 'Student_Name', 'Optional', 'Status', 'GS_Hrs', 'Optional_Hrs', 'Mains_Hrs', 'Mains_Qs', 'Prelims_Hrs', 'Prelims_MCQs', 'CSAT_Hrs', 'Total_Hrs', 'Remarks']];
       roster.forEach(s => {
         const e = getDayLogForStudent(dateStr, s.id);
-        rows.push([dateStr, s.id, `"${s.name}"`, `"${s.optional}"`, e.status, e.gs, e.opt, e.mainsHrs, e.mainsQs, e.prelimsHrs, e.prelimsMCQs, e.csat, computeTotalHours(e), `"${(e.remarks || '').replace(/"/g, '""')}"`]);
+        const total = computeTotalHours(e);
+        rows.push([dateStr, s.id, `"${s.name}"`, `"${s.optional}"`, e.status, e.gs, e.opt, e.mainsHrs, e.mainsQs, e.prelimsHrs, e.prelimsMCQs, e.csat, total, `"${(e.remarks || '').replace(/"/g, '""')}"`]);
       });
-      const newlineChar = String.fromCharCode(10);
-      const csvContent = 'data:text/csv;charset=utf-8,' + rows.map(r => r.join(',')).join(newlineChar);
-      const link = document.createElement('a');
-      link.setAttribute('href', encodeURI(csvContent));
-      link.setAttribute('download', `MANUU_CSE_StudyLog_${dateStr}.csv`);
+
+      const csvContent = rows.map(e => e.join(",")).join("\n");
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.setAttribute("href", url);
+      link.setAttribute("download", `MANUU_CSE_StudyLog_${dateStr}.csv`);
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
